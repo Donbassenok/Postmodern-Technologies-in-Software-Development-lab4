@@ -81,12 +81,14 @@ public class TelegramBotService : IHostedService
 
             _logger.LogInformation($"Згенеровано URL: {fileUrl}");
 
+            string? userCaption = message.Caption;
+
             var waitMessage = await botClient.SendMessage(
                 chatId: chatId,
                 text: "⏳ Отримав зображення. Аналізую...",
                 cancellationToken: cancellationToken);
 
-            var aiResponse = await _frameProcessor.AnalyzeImageAsync(fileUrl);
+            var aiResponse = await _frameProcessor.AnalyzeImageAsync(fileUrl, userCaption);
 
             await botClient.SendMessage(
                 chatId: chatId,
@@ -94,7 +96,6 @@ public class TelegramBotService : IHostedService
                 cancellationToken: cancellationToken);
         }
     }
-
     private Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken cancellationToken)
     {
         _logger.LogError($"Помилка Telegram API: {exception.Message}");

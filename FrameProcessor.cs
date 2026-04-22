@@ -1,5 +1,3 @@
-using System;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OpenAI;
@@ -25,7 +23,7 @@ public class FrameProcessor
         _model = configuration["OpenAI:Model"] ?? "gpt-4o-mini";
     }
 
-    public async Task<string> AnalyzeImageAsync(string fileUrl)
+    public async Task<string> AnalyzeImageAsync(string fileUrl, string? userText = null)
     {
         _logger.LogInformation("Починаю аналіз зображення через OpenAI Responses API...");
 
@@ -33,10 +31,13 @@ public class FrameProcessor
         {
             ResponsesClient responsesClient = _openAiClient.GetResponsesClient();
 
+            string textPrompt = string.IsNullOrWhiteSpace(userText) 
+                ? "Що зображено на цьому фото?" 
+                : userText;
 
             var contentParts = new List<ResponseContentPart>
             {
-                ResponseContentPart.CreateInputTextPart("Що зображено на цьому фото?"),
+                ResponseContentPart.CreateInputTextPart(textPrompt),
                 ResponseContentPart.CreateInputImagePart(new Uri(fileUrl), ResponseImageDetailLevel.High)
             };
 
