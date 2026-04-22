@@ -5,6 +5,8 @@ var builder = Host.CreateDefaultBuilder(args);
 
 builder.ConfigureServices((context, services) =>
 {
+    services.AddSingleton<FrameProcessor>();
+    
     services.AddHostedService<TelegramBotService>();
 });
 

@@ -11,10 +11,13 @@ public class TelegramBotService : IHostedService
     private readonly ILogger<TelegramBotService> _logger;
     private readonly TelegramBotClient _botClient;
     private readonly string _botToken;
+    private readonly FrameProcessor _frameProcessor; 
 
-    public TelegramBotService(ILogger<TelegramBotService> logger, IConfiguration configuration)
+    // Оновлюємо конструктор
+    public TelegramBotService(ILogger<TelegramBotService> logger, IConfiguration configuration, FrameProcessor frameProcessor)
     {
         _logger = logger;
+        _frameProcessor = frameProcessor; 
         
         _botToken = configuration["BotConfiguration:BotToken"] 
             ?? throw new ArgumentNullException("BotToken is missing");
@@ -78,9 +81,16 @@ public class TelegramBotService : IHostedService
 
             _logger.LogInformation($"Згенеровано URL: {fileUrl}");
 
+            var waitMessage = await botClient.SendMessage(
+                chatId: chatId,
+                text: "⏳ Отримав зображення. Аналізую...",
+                cancellationToken: cancellationToken);
+
+            var aiResponse = await _frameProcessor.AnalyzeImageAsync(fileUrl);
+
             await botClient.SendMessage(
                 chatId: chatId,
-                text: $"Я отримав ваше фото! Ось пряме посилання на нього:\n{fileUrl}\n\n(Пізніше ми передамо його ШІ для аналізу).",
+                text: aiResponse,
                 cancellationToken: cancellationToken);
         }
     }
