@@ -13,8 +13,10 @@ public class FrameProcessor
     public FrameProcessor(ILogger<FrameProcessor> logger, IConfiguration configuration)
     {
         _logger = logger;
+
         string apiKey = configuration["OpenAI:ApiKey"] 
             ?? throw new ArgumentNullException("OpenAI:ApiKey відсутній у конфігурації.");
+
         _openAiClient = new(apiKey);
 
         _systemPrompt = configuration["OpenAI:SystemPrompt"] 
@@ -50,7 +52,11 @@ public class FrameProcessor
                 InputItems = { userMessage } 
             };
             ResponseResult response = await responsesClient.CreateResponseAsync(options);
-            return response.GetOutputText() ?? "Відповідь порожня";
+            string resultText = response.GetOutputText() ?? "Відповідь порожня";
+
+            _logger.LogInformation("Успішно отримано відповідь від OpenAI. Довжина тексту: {Length} символів.", resultText.Length);
+
+            return resultText;
         }
         catch (Exception ex)
         {

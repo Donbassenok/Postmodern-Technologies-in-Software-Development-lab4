@@ -61,9 +61,17 @@ public class TelegramBotService : IHostedService
         if (message.Type == MessageType.Text)
         {
             _logger.LogInformation($"Отримано текст: {message.Text}");
+
+            string replyText = message.Text switch
+            {
+                "/start" => "Привіт! Я ШІ-експерт з аналізу зображень 👁️. Надішліть мені будь-яке фото (можна додати питання у підпис), і я розповім, що на ньому.",
+                "/help" => "⚙️ Як користуватися:\n1. Надішліть фото.\n2. (Опційно) Додайте текст до фотографії, щоб запитати щось конкретне.\n3. Зачекайте кілька секунд на відповідь.",
+                _ => "Я розумію лише фотографії 📸. Надішліть мені зображення, яке потрібно проаналізувати."
+            };
+
             await botClient.SendMessage(
                 chatId: chatId,
-                text: "Привіт! Я бот для аналізу зображень 👁️. Будь ласка, надішліть мені фотографію.",
+                text: replyText,
                 cancellationToken: cancellationToken);
             return;
         }
@@ -93,6 +101,15 @@ public class TelegramBotService : IHostedService
             await botClient.SendMessage(
                 chatId: chatId,
                 text: aiResponse,
+                cancellationToken: cancellationToken);
+        }
+
+        if (message.Type != MessageType.Text && message.Type != MessageType.Photo)
+        {
+            _logger.LogWarning($"Отримано непідтримуваний тип повідомлення: {message.Type}");
+            await botClient.SendMessage(
+                chatId: chatId,
+                text: "🤷‍♂️ Вибачте, але я вмію аналізувати лише стиснуті фотографії. Будь ласка, надішліть зображення як звичайне фото, а не як документ чи файл.",
                 cancellationToken: cancellationToken);
         }
     }
